@@ -1,0 +1,137 @@
+#include <algorithm>
+#include <cstdlib>
+#include <ctime>
+#include <fstream> //read and write text files
+#include <iostream>
+#include <vector> // a vector is a list of strings e.g. {"Car,Bus,Tram", "Apple,Pie,Cake"}
+
+class Player {
+private:
+  const int attempts;
+
+public:
+  Player() : attempts(6) { // setter for player's attempts
+  }
+  int getAttempts() const { // getter for player's attempts
+    return attempts;
+  }
+};
+
+class WordleGame {
+private:
+  std::vector<std::string> wordleWords;
+  std::string wordle_word;
+  const int time_limit = 40;
+
+public:
+  WordleGame() { ReadRandomWordleWords(); }
+
+  void printStart(const Player &player) {
+    std::cout << "Let the Wordle begin, you have 40 seconds:\n";
+    std::cout << "May the " << player.getAttempts()
+              << " guesses you have ever be in you favour.\n";
+    std::cout << "After guessing, you may process then by pressing enter\n";
+  }
+
+  void ReadRandomWordleWords() {
+    std::ifstream wordleDoc("wordle_words.txt");
+    if (wordleDoc.is_open()) {
+      std::string
+          wordle_list; // store each word from the file into this variable
+      while (std::getline(wordleDoc, wordle_list)) {
+        wordleWords.push_back(wordle_list); // while there are still words in
+                                            // the file, add them to the vector
+      }
+      wordleDoc.close();
+    } else { // error handling
+      std::cerr << "Unable to open text file\n";
+    }
+  }
+
+  std::string getRandomWordleWord() {
+    return wordleWords
+        [rand() %
+         wordleWords.size()]; // square brackets for calling indices in arrays
+                              // //rand() is a random number generator //% for
+                              // setting the boundary of the random number
+                              // generator to the wordleword's size
+  }
+
+  void playGame(const Player &player) {
+    printStart(player);
+    wordle_word = getRandomWordleWord();
+
+    time_t start_time = time(nullptr); // start the timer
+    int attempts = player.getAttempts();
+
+    std::string wordle_guess;
+    for (int attempt = 1; attempt <= player.getAttempts(); ++attempt) {
+
+      std::cout << "Enter a 5 letter word: ";
+      std::cin >> wordle_guess;
+      std::transform(wordle_guess.begin(), wordle_guess.end(),
+                     wordle_guess.begin(), ::tolower);
+
+      time_t time_passed = time(nullptr) - start_time;
+      if (time_passed >= time_limit) {
+        std::cout << "Time's up! You exceeded " << time_limit << " seconds.\n";
+        break;
+      }
+      if (wordle_guess.length() != 5) {
+        std::cout << "Please enter a 5 letter word.\n";
+        std::cout << "Attempts left: " << attempts - attempt << "\n";
+        std::cout << "Time left: " << time_limit - time_passed << " seconds\n";
+        continue;
+      }
+
+      if (wordle_guess == wordle_word) {
+        std::cout << "Congrats, you guessed the wordle in " << attempt
+                  << " guess(es).\n";
+        std::cout << "Time left: " << time_limit - time_passed << " seconds\n";
+        break;
+      }
+
+      // after guessing a word wrong, display attempts left and time left
+      std::cout << "Attempts left: " << attempts - attempt << "\n";
+      std::cout << "Time left: " << time_limit - time_passed << " seconds\n";
+
+      for (size_t i = 0; i < wordle_guess.length(); ++i) {
+        if (wordle_guess[i] == wordle_word[i]) {
+          std::cout << "\x1b[32m" << wordle_guess[i];
+        } else if (wordle_guess.find(wordle_word[i]) != std::string::npos) {
+          std::cout << "\x1b[33m" << wordle_guess[i];
+        } else {
+          std::cout << "\x1b[37m" << wordle_guess[i]; // was meant to be printed
+                                                      // in a different colour
+        }
+      }
+      std::cout << "\x1b[0m\n"; //clear colour
+    }
+    if (wordle_guess != wordle_word) {
+      std::cout << "Sorry, the word was: " << wordle_word << ".\n";
+    }
+  }
+};
+
+int main() {
+  srand(static_cast<unsigned>(time(nullptr))); // stops the seed from being
+  // the same every time
+  while (true) {
+    WordleGame game;
+    Player player;
+    game.playGame(player);
+
+    std::string playAgain;
+    std::cout << "Do you wish to play again? (yes/no): ";
+    std::cin >> playAgain;
+    std::transform(playAgain.begin(), playAgain.end(), playAgain.begin(),
+                   ::tolower);
+
+    if (playAgain != "yes") {
+      std::cout << "That's Game Over. Hope to see you again soon!\n";
+      break;
+    }
+  }
+
+  return 0;
+}
