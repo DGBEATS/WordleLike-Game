@@ -1,0 +1,111 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"math/rand"
+	"os"
+	"strings"
+	"time"
+)
+
+const (
+	time_limit  = 40
+	attempts    = 6
+	word_length = 5
+)
+
+func printStart() {
+	fmt.Println("Let the Wordle begin, you have 40 seconds:")
+	fmt.Println("May the 6 guesses you have be ever in your favour.")
+	fmt.Println("After guessing, you may process then by pressing enter")
+}
+
+func readRandomWordleWord() string {
+	file, err := os.Open("wordle_words.txt")
+	if err != nil { //if there is an error
+		fmt.Println("Error opening the file")
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	var wordle_list []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() { //while there are more lines to be scanned
+		wordle_list = append(wordle_list, scanner.Text()) //add(append) each found word to the wordle_list array
+
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error reading file:")
+		os.Exit(1)
+	}
+	return wordle_list[rand.Intn(len(wordle_list))] //return a random word from the wordle_list array
+}
+
+func playGame() {
+	printStart()
+	wordle_word := readRandomWordleWord() //select a random word for the wordle game
+
+	start_time := time.Now()
+	var wordle_guess string
+
+	for attempt := 1; attempt <= attempts; attempt++ {
+		fmt.Print("Enter a 5 letter word: ")
+		fmt.Scan(&wordle_guess)
+		wordle_guess = strings.ToLower(wordle_guess) //make it case insensitive immediately after reading the word
+
+		time_passed := time.Since(start_time)
+		if time_passed.Seconds() > time_limit {
+			fmt.Println("\x1b[31m", "Time's up! You exceeded 40 seconds.", "\x1b[0m") //make red only this line red
+			break
+		}
+		if len(wordle_guess) != word_length {
+			fmt.Println("Please enter a 5 letter word.")
+			fmt.Printf("\x1b[36mAttempts left: %d\n", attempts-attempt)
+			fmt.Printf("Time left: %.2f seconds\x1b[0m\n", time_limit-time_passed.Seconds())
+			continue
+		}
+		if wordle_guess == wordle_word {
+			fmt.Println("\x1b[32m", wordle_guess)
+			fmt.Printf("Congrats, you guessed the wordle in %d guess(es)\n", attempt)
+			fmt.Printf("Time Taken: %.2f seconds\x1b[0m\n", time_passed.Seconds())
+			return
+		}
+
+		// After guessing a word wrong, display attempts left and time left
+		fmt.Printf("\x1b[36mAttempts left: %d\n", attempts-attempt)
+		fmt.Printf("Time left: %.2f seconds\x1b[0m\n", time_limit-time_passed.Seconds())
+
+		//Display the wordle_guess with colours based on positioning of the letter's guessed
+		for i := 0; i < len(wordle_guess); i++ {
+
+			if wordle_guess[i] == wordle_word[i] {
+				fmt.Print("\x1b[32m", string(wordle_guess[i])) //green letter
+
+			} else if strings.ContainsAny(wordle_word, string(wordle_guess[i])) {
+				fmt.Print("\x1b[33m", string(wordle_guess[i])) //if the word contains the letter, print it yellow
+
+			} else {
+				fmt.Print("\x1b[37m", string(wordle_guess[i])) //white letter
+			}
+		}
+		fmt.Println("\x1b[0m") // Reset the color
+	}
+	fmt.Printf("Sorry, the word was: %s\n", wordle_word)
+}
+
+func main() {
+
+	for {
+		playGame()
+
+		var playAgain string
+		fmt.Print("Do you wish to play again? (yes/no): ")
+		fmt.Scan(&playAgain)
+
+		if strings.ToLower(playAgain) != "yes" {
+			fmt.Println("That's Game Over. Hope to see you again soon!")
+			break
+		}
+	}
+}
