@@ -75,5 +75,5 @@ while True:
     play_game()
     play_again = input("Do you wish to play again? (yes/no): ").lower()
     if play_again != "yes":
-        print("That's Game Over. Hope to see you again soon! - Dagogo Apiafi - 20029184")
+        print("That's Game Over. Hope to see you again soon!")
         break
