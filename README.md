@@ -6,7 +6,8 @@ I wrote this game in 3 different programming languages using 2 different program
 ### Prerequisites
 
 1. These codes can be run using [Replit](https://replit.com/~).
-2. No further prerequisites are needed unless you would like to run the code on a local IDE.
+2. In the same directory as the code, create a txt file called "wordle_words" where c=you can store the 5 letter words of your choosing. (Separate the word with indented spaces, an example txt file is included.)
+3. No further prerequisites are needed unless you would like to run the code on a local IDE.
 
 ### Steps
 1. Open the Replit website page and create a new space to paste the code.
